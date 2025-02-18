@@ -30,12 +30,13 @@ pipeline {
         }
         stage('Terraform Plan') {
             steps {
+                sh "ls"
                 sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
             }
         }
         stage('Approval Before Apply') {
             when {
-                expression { return env.ENVIRONMENT == 'prod' }  // Only require approval for production
+                expression { return env.ENVIRONMENT == 'prod' }
             }
             steps {
                 input "Approve deployment to ${env.ENVIRONMENT}?"
