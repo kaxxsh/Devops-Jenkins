@@ -62,32 +62,101 @@
 //     }
 // }
 
+// pipeline {
+//     agent any
+//     environment {
+//         AWS_REGION = "us-west-2"
+//     }
+//     stages {
+//         stage('Terraform Deploy') {
+//             parallel {
+//                 stage('Deploy to Dev') {
+//                     steps {
+//                         script {
+//                             deployTerraform("dev")
+//                         }
+//                     }
+//                 }
+//                 stage('Deploy to Stage') {
+//                     steps {
+//                         script {
+//                             deployTerraform("stage")
+//                         }
+//                     }
+//                 }
+//                 stage('Deploy to Prod') {
+//                     steps {
+//                         script {
+//                             deployTerraformWithApproval("prod")
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
+
+// def deployTerraform(env) {
+//     dir('task3') {  // Run Terraform inside 'task3' directory
+//         echo "Starting Terraform Deployment for ${env}..."
+        
+//         sh 'terraform init'
+//         sh "terraform plan -out=tfplan -var-file=${env}.tfvars"
+//         sh "terraform apply -auto-approve tfplan"
+
+//         echo "Terraform Deployment for ${env} Completed!"
+//     }
+// }
+
+// def deployTerraformWithApproval(env) {
+//     dir('task3') {  // Run Terraform inside 'task3' directory
+//         echo "Starting Terraform Deployment for ${env}..."
+        
+//         sh 'terraform init'
+//         sh "terraform plan -out=tfplan -var-file=${env}.tfvars"
+
+//         // Require approval before applying to production
+//         input "Approve deployment to ${env}?"
+        
+//         sh "terraform apply -auto-approve tfplan"
+
+//         echo "Terraform Deployment for ${env} Completed!"
+//     }
+// }
+
+
+
+
+
+// destory
+
+
 pipeline {
     agent any
     environment {
         AWS_REGION = "us-west-2"
     }
     stages {
-        stage('Terraform Deploy') {
+        stage('Terraform Destroy') {
             parallel {
-                stage('Deploy to Dev') {
+                stage('Destroy Dev') {
                     steps {
                         script {
-                            deployTerraform("dev")
+                            destroyTerraform("dev")
                         }
                     }
                 }
-                stage('Deploy to Stage') {
+                stage('Destroy Stage') {
                     steps {
                         script {
-                            deployTerraform("stage")
+                            destroyTerraform("stage")
                         }
                     }
                 }
-                stage('Deploy to Prod') {
+                stage('Destroy Prod') {
                     steps {
                         script {
-                            deployTerraformWithApproval("prod")
+                            destroyTerraformWithApproval("prod")
                         }
                     }
                 }
@@ -96,30 +165,30 @@ pipeline {
     }
 }
 
-def deployTerraform(env) {
-    dir('task3') {  // Run Terraform inside 'task3' directory
-        echo "Starting Terraform Deployment for ${env}..."
+def destroyTerraform(env) {
+    dir('task3') {  // Ensure Terraform runs inside 'task3' directory
+        echo "Starting Terraform Destroy for ${env}..."
         
         sh 'terraform init'
-        sh "terraform plan -out=tfplan -var-file=${env}.tfvars"
+        sh "terraform plan -destroy -out=tfplan -var-file=${env}.tfvars"
         sh "terraform apply -auto-approve tfplan"
 
-        echo "Terraform Deployment for ${env} Completed!"
+        echo "Terraform Destroy for ${env} Completed!"
     }
 }
 
-def deployTerraformWithApproval(env) {
-    dir('task3') {  // Run Terraform inside 'task3' directory
-        echo "Starting Terraform Deployment for ${env}..."
+def destroyTerraformWithApproval(env) {
+    dir('task3') {  // Ensure Terraform runs inside 'task3' directory
+        echo "Starting Terraform Destroy for ${env}..."
         
         sh 'terraform init'
-        sh "terraform plan -out=tfplan -var-file=${env}.tfvars"
+        sh "terraform plan -destroy -out=tfplan -var-file=${env}.tfvars"
 
-        // Require approval before applying to production
-        input "Approve deployment to ${env}?"
+        // Require approval before destroying production
+        input "Approve destruction of ${env} environment?"
         
         sh "terraform apply -auto-approve tfplan"
 
-        echo "Terraform Deployment for ${env} Completed!"
+        echo "Terraform Destroy for ${env} Completed!"
     }
 }
