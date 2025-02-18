@@ -1,66 +1,66 @@
-// pipeline {
-//     agent any
-//     environment {
-//         AWS_REGION = "us-west-2"
-//     }
-//     stages {
-//         stage('Setup') {
-//             steps {
-//                 script {
-//                     def branch = env.BRANCH_NAME ?: 'unknown'
-//                     echo "Detected Branch: ${branch}"
+pipeline {
+    agent any
+    environment {
+        AWS_REGION = "us-west-2"
+    }
+    stages {
+        stage('Setup') {
+            steps {
+                script {
+                    def branch = env.BRANCH_NAME ?: 'unknown'
+                    echo "Detected Branch: ${branch}"
 
-//                     def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
+                    def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
                     
-//                     if (envMap.containsKey(branch)) {
-//                         env.ENVIRONMENT = envMap[branch]
-//                     } else {
-//                         error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
-//                     }
+                    if (envMap.containsKey(branch)) {
+                        env.ENVIRONMENT = envMap[branch]
+                    } else {
+                        error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
+                    }
 
-//                     echo "Deploying to environment: ${env.ENVIRONMENT}"
-//                 }
-//             }
-//         }
-//         stage('Terraform Init') {
-//             steps {
-//                 dir('task3') {  // Run inside 'task3' folder
-//                     sh 'terraform init'
-//                 }
-//             }
-//         }
-//         stage('Terraform Plan') {
-//             steps {
-//                 dir('task3') {  // Run inside 'task3' folder
-//                     sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
-//                 }
-//             }
-//         }
-//         stage('Approval Before Apply') {
-//             when {
-//                 expression { return env.ENVIRONMENT == 'prod' }
-//             }
-//             steps {
-//                 input "Approve deployment to ${env.ENVIRONMENT}?"
-//             }
-//         }
-//         stage('Terraform Apply') {
-//             steps {
-//                 dir('task3') {  // Run inside 'task3' folder
-//                     sh "terraform apply -auto-approve tfplan"
-//                 }
-//             }
-//         }
-//     }
-//     post {
-//         success {
-//             echo "Terraform deployment successful for ${env.ENVIRONMENT}"
-//         }
-//         failure {
-//             echo "Terraform deployment failed for ${env.ENVIRONMENT}"
-//         }
-//     }
-// }
+                    echo "Deploying to environment: ${env.ENVIRONMENT}"
+                }
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Terraform Plan') {
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
+                }
+            }
+        }
+        stage('Approval Before Apply') {
+            when {
+                expression { return env.ENVIRONMENT == 'prod' }
+            }
+            steps {
+                input "Approve deployment to ${env.ENVIRONMENT}?"
+            }
+        }
+        stage('Terraform Apply') {
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform apply -auto-approve tfplan"
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "Terraform deployment successful for ${env.ENVIRONMENT}"
+        }
+        failure {
+            echo "Terraform deployment failed for ${env.ENVIRONMENT}"
+        }
+    }
+}
 
 // pipeline {
 //     agent any
@@ -129,66 +129,66 @@
 
 
 // destory
-
-
 pipeline {
     agent any
     environment {
         AWS_REGION = "us-west-2"
     }
     stages {
+        stage('Setup') {
+            steps {
+                script {
+                    def branch = env.BRANCH_NAME ?: 'unknown'
+                    echo "Detected Branch: ${branch}"
+
+                    def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
+                    
+                    if (envMap.containsKey(branch)) {
+                        env.ENVIRONMENT = envMap[branch]
+                    } else {
+                        error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
+                    }
+
+                    echo "Destroying resources for environment: ${env.ENVIRONMENT}"
+                }
+            }
+        }
+        stage('Terraform Init') {
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Terraform Plan Destroy') {
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform plan -destroy -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
+                }
+            }
+        }
+        stage('Approval Before Destroy') {
+            when {
+                expression { return env.ENVIRONMENT == 'prod' }
+            }
+            steps {
+                input "Approve destruction of ${env.ENVIRONMENT} environment?"
+            }
+        }
         stage('Terraform Destroy') {
-            parallel {
-                stage('Destroy Dev') {
-                    steps {
-                        script {
-                            destroyTerraform("dev")
-                        }
-                    }
-                }
-                stage('Destroy Stage') {
-                    steps {
-                        script {
-                            destroyTerraform("stage")
-                        }
-                    }
-                }
-                stage('Destroy Prod') {
-                    steps {
-                        script {
-                            destroyTerraformWithApproval("prod")
-                        }
-                    }
+            steps {
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform apply -auto-approve tfplan"
                 }
             }
         }
     }
-}
-
-def destroyTerraform(env) {
-    dir('task3') {  // Ensure Terraform runs inside 'task3' directory
-        echo "Starting Terraform Destroy for ${env}..."
-        
-        sh 'terraform init'
-        sh "terraform plan -destroy -out=tfplan -var-file=${env}.tfvars"
-        sh "terraform apply -auto-approve tfplan"
-
-        echo "Terraform Destroy for ${env} Completed!"
-    }
-}
-
-def destroyTerraformWithApproval(env) {
-    dir('task3') {  // Ensure Terraform runs inside 'task3' directory
-        echo "Starting Terraform Destroy for ${env}..."
-        
-        sh 'terraform init'
-        sh "terraform plan -destroy -out=tfplan -var-file=${env}.tfvars"
-
-        // Require approval before destroying production
-        input "Approve destruction of ${env} environment?"
-        
-        sh "terraform apply -auto-approve tfplan"
-
-        echo "Terraform Destroy for ${env} Completed!"
+    post {
+        success {
+            echo "Terraform destruction successful for ${env.ENVIRONMENT}"
+        }
+        failure {
+            echo "Terraform destruction failed for ${env.ENVIRONMENT}"
+        }
     }
 }
