@@ -22,6 +22,14 @@ pipeline {
             }
         }
 
+        stage('Print Branch') {
+            steps {
+                script {
+                    echo "Running on branch: ${env.GIT_BRANCH}"
+                }
+            }
+        }
+
         stage('Terraform Init') {
             steps {
                 script {
@@ -44,7 +52,7 @@ pipeline {
 
         stage('Approval Before Apply') {
             when {
-                branch 'main'
+                expression { env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main' }
             }
             steps {
                 script {
@@ -57,7 +65,7 @@ pipeline {
 
         stage('Terraform Apply') {
             when {
-                branch 'main'
+                expression { env.GIT_BRANCH == 'main' || env.GIT_BRANCH == 'origin/main' }
             }
             steps {
                 script {
