@@ -1,66 +1,66 @@
-pipeline {
-    agent any
-    environment {
-        AWS_REGION = "us-west-2"
-    }
-    stages {
-        stage('Setup') {
-            steps {
-                script {
-                    def branch = env.BRANCH_NAME ?: 'unknown'
-                    echo "Detected Branch: ${branch}"
+// pipeline {
+//     agent any
+//     environment {
+//         AWS_REGION = "us-west-2"
+//     }
+//     stages {
+//         stage('Setup') {
+//             steps {
+//                 script {
+//                     def branch = env.BRANCH_NAME ?: 'unknown'
+//                     echo "Detected Branch: ${branch}"
 
-                    def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
+//                     def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
                     
-                    if (envMap.containsKey(branch)) {
-                        env.ENVIRONMENT = envMap[branch]
-                    } else {
-                        error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
-                    }
+//                     if (envMap.containsKey(branch)) {
+//                         env.ENVIRONMENT = envMap[branch]
+//                     } else {
+//                         error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
+//                     }
 
-                    echo "Deploying to environment: ${env.ENVIRONMENT}"
-                }
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                dir('task3') {  // Run inside 'task3' folder
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Terraform Plan') {
-            steps {
-                dir('task3') {  // Run inside 'task3' folder
-                    sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
-                }
-            }
-        }
-        stage('Approval Before Apply') {
-            when {
-                expression { return env.ENVIRONMENT == 'prod' }
-            }
-            steps {
-                input "Approve deployment to ${env.ENVIRONMENT}?"
-            }
-        }
-        stage('Terraform Apply') {
-            steps {
-                dir('task3') {  // Run inside 'task3' folder
-                    sh "terraform apply -auto-approve tfplan"
-                }
-            }
-        }
-    }
-    post {
-        success {
-            echo "Terraform deployment successful for ${env.ENVIRONMENT}"
-        }
-        failure {
-            echo "Terraform deployment failed for ${env.ENVIRONMENT}"
-        }
-    }
-}
+//                     echo "Deploying to environment: ${env.ENVIRONMENT}"
+//                 }
+//             }
+//         }
+//         stage('Terraform Init') {
+//             steps {
+//                 dir('task3') {  // Run inside 'task3' folder
+//                     sh 'terraform init'
+//                 }
+//             }
+//         }
+//         stage('Terraform Plan') {
+//             steps {
+//                 dir('task3') {  // Run inside 'task3' folder
+//                     sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
+//                 }
+//             }
+//         }
+//         stage('Approval Before Apply') {
+//             when {
+//                 expression { return env.ENVIRONMENT == 'prod' }
+//             }
+//             steps {
+//                 input "Approve deployment to ${env.ENVIRONMENT}?"
+//             }
+//         }
+//         stage('Terraform Apply') {
+//             steps {
+//                 dir('task3') {  // Run inside 'task3' folder
+//                     sh "terraform apply -auto-approve tfplan"
+//                 }
+//             }
+//         }
+//     }
+//     post {
+//         success {
+//             echo "Terraform deployment successful for ${env.ENVIRONMENT}"
+//         }
+//         failure {
+//             echo "Terraform deployment failed for ${env.ENVIRONMENT}"
+//         }
+//     }
+// }
 
 // pipeline {
 //     agent any
