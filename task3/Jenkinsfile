@@ -7,10 +7,9 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // Ensure BRANCH_NAME is assigned a value
                     def branch = env.BRANCH_NAME ?: 'unknown'
                     echo "Detected Branch: ${branch}"
-                    
+
                     def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
                     
                     if (envMap.containsKey(branch)) {
@@ -25,15 +24,16 @@ pipeline {
         }
         stage('Terraform Init') {
             steps {
-                sh 'pwd'
-                sh 'ls -lah'
-                sh 'terraform init'
+                dir('task3') {  // Run inside 'task3' folder
+                    sh 'terraform init'
+                }
             }
         }
         stage('Terraform Plan') {
             steps {
-                sh "ls"
-                sh "terraform plan -out=tfplan -var-file=task3/${env.ENVIRONMENT}.tfvars"
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
+                }
             }
         }
         stage('Approval Before Apply') {
@@ -46,7 +46,9 @@ pipeline {
         }
         stage('Terraform Apply') {
             steps {
-                sh "terraform apply -auto-approve tfplan"
+                dir('task3') {  // Run inside 'task3' folder
+                    sh "terraform apply -auto-approve tfplan"
+                }
             }
         }
     }
