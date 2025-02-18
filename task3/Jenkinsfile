@@ -7,13 +7,16 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // Map environment name based on the branch
+                    // Ensure BRANCH_NAME is available
+                    def branch = env.BRANCH_NAME ?: 'unknown'
                     def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
-                    env.ENVIRONMENT = envMap.get(env.BRANCH_NAME, 'invalid')
-
-                    if (env.ENVIRONMENT == 'invalid') {
-                        error "Invalid branch name: ${env.BRANCH_NAME}. Use 'dev', 'stage', or 'prod'."
+                    
+                    if (envMap.containsKey(branch)) {
+                        env.ENVIRONMENT = envMap[branch]
+                    } else {
+                        error "Invalid branch name: ${branch}. Use 'dev', 'stage', or 'prod'."
                     }
+
                     echo "Deploying to environment: ${env.ENVIRONMENT}"
                 }
             }
