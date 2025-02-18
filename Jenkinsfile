@@ -44,7 +44,7 @@ pipeline {
 
         stage('Approval Before Apply') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 script {
@@ -57,7 +57,7 @@ pipeline {
 
         stage('Terraform Apply') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 script {
