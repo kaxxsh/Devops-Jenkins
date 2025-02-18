@@ -7,14 +7,12 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'dev') {
-                        env.ENVIRONMENT = 'dev'
-                    } else if (env.BRANCH_NAME == 'stage') {
-                        env.ENVIRONMENT = 'stage'
-                    } else if (env.BRANCH_NAME == 'prod') {
-                        env.ENVIRONMENT = 'prod'
-                    } else {
-                        error "Invalid branch name. Use dev, stage, or prod."
+                    // Map environment name based on the branch
+                    def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
+                    env.ENVIRONMENT = envMap.get(env.BRANCH_NAME, 'invalid')
+
+                    if (env.ENVIRONMENT == 'invalid') {
+                        error "Invalid branch name: ${env.BRANCH_NAME}. Use 'dev', 'stage', or 'prod'."
                     }
                     echo "Deploying to environment: ${env.ENVIRONMENT}"
                 }
@@ -45,74 +43,3 @@ pipeline {
         }
     }
 }
-
-
-
-
-// Jenkinsfile for Multistage Pipeline
-
-// pipeline {
-//     agent any
-//     environment {
-//         AWS_REGION = "us-west-2"
-//     }
-//     stages {
-//         stage('Terraform Deploy') {
-//             parallel {
-//                 stage('Deploy to Dev') {
-//                     steps {
-//                         script {
-//                             deployTerraform("dev")
-//                         }
-//                     }
-//                 }
-//                 stage('Deploy to Stage') {
-//                     steps {
-//                         script {
-//                             deployTerraform("stage")
-//                         }
-//                     }
-//                 }
-//                 stage('Deploy to Prod') {
-//                     steps {
-//                         script {
-//                             deployTerraform("prod")
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// def deployTerraform(env) {
-//     echo "Deploying to ${env}"
-//     sh """
-//         terraform init
-//         terraform plan -var-file=${env}.tfvars
-//         terraform apply -auto-approve -var-file=${env}.tfvars
-//     """
-// }
-
-// variable "environment" {
-//   description = "Environment name (dev, stage, prod)"
-// }
-
-// locals {
-//   environment_suffix = var.environment
-// }
-
-// resource "aws_vpc" "main" {
-//   cidr_block           = var.vpc_cidr
-//   enable_dns_support   = true
-//   enable_dns_hostnames = true
-//   tags                 = { Name = "Main-VPC-${local.environment_suffix}" }
-// }
-
-// resource "aws_lb" "app_lb" {
-//   name               = "app-load-balancer-${local.environment_suffix}"
-//   load_balancer_type = "application"
-//   subnets            = [aws_subnet.subnets["public_1"].id, aws_subnet.subnets["public_2"].id]
-
-//   tags = { Name = "App-Load-Balancer-${local.environment_suffix}" }
-// }
