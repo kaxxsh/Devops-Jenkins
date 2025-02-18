@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                     dir("${TF_WORKING_DIR}") {
-                        sh 'terraform plan -out=tfplan'
+                        sh 'terraform plan'
                     }
                 }
             }
@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     dir("${TF_WORKING_DIR}") {
-                        sh 'terraform apply -auto-approve tfplan'
+                        sh 'terraform apply -auto-approve'
                     }
                 }
             }
