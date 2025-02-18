@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "kameshwaranm/sample-web-app"
+        DOCKER_DIR = "./Docker"
+        DOCKER_IMAGE = "your-dockerhub-username/sample-web-app"
         DOCKER_TAG = "latest"
     }
 
@@ -15,10 +16,22 @@ pipeline {
             }
         }
 
+        stage('Move to Docker Directory') {
+            steps {
+                script {
+                    dir("${DOCKER_DIR}") {
+                        sh "ls -la" 
+                    }
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                    dir("${DOCKER_DIR}") {
+                        sh "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
+                    }
                 }
             }
         }
