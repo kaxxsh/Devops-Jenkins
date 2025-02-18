@@ -7,14 +7,16 @@ pipeline {
         stage('Setup') {
             steps {
                 script {
-                    // Ensure BRANCH_NAME is available
+                    // Ensure BRANCH_NAME is assigned a value
                     def branch = env.BRANCH_NAME ?: 'unknown'
+                    echo "Detected Branch: ${branch}"
+                    
                     def envMap = ['dev': 'dev', 'stage': 'stage', 'prod': 'prod']
                     
                     if (envMap.containsKey(branch)) {
                         env.ENVIRONMENT = envMap[branch]
                     } else {
-                        error "Invalid branch name: ${branch}. Use 'dev', 'stage', or 'prod'."
+                        error "Invalid branch name detected: '${branch}'. Expected 'dev', 'stage', or 'prod'."
                     }
 
                     echo "Deploying to environment: ${env.ENVIRONMENT}"
@@ -28,12 +30,20 @@ pipeline {
         }
         stage('Terraform Plan') {
             steps {
-                sh "terraform plan -var-file=${env.ENVIRONMENT}.tfvars"
+                sh "terraform plan -out=tfplan -var-file=${env.ENVIRONMENT}.tfvars"
+            }
+        }
+        stage('Approval Before Apply') {
+            when {
+                expression { return env.ENVIRONMENT == 'prod' }  // Only require approval for production
+            }
+            steps {
+                input "Approve deployment to ${env.ENVIRONMENT}?"
             }
         }
         stage('Terraform Apply') {
             steps {
-                sh "terraform apply -auto-approve -var-file=${env.ENVIRONMENT}.tfvars"
+                sh "terraform apply -auto-approve tfplan"
             }
         }
     }
